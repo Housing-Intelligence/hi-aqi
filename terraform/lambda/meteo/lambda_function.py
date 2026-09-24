@@ -2,10 +2,13 @@ import json
 import math
 import os
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from typing import List, Dict
 
 import boto3
-import requests
+
 
 OPEN_METEO_URL = (
     "https://air-quality-api.open-meteo.com/v1/air-quality"
@@ -39,6 +42,7 @@ HOURLY_VARIABLES = [
 sqs = boto3.client("sqs")
 
 SQS_QUEUE_URL = os.environ["SQS_QUEUE_URL"]
+
 
 # Generate sampling grid
 def generate_grid_points() -> List[Dict[str, float]]:
@@ -77,6 +81,7 @@ def generate_grid_points() -> List[Dict[str, float]]:
 
     return points
 
+
 # Batch
 def split_into_batches(
     points: List[Dict[str, float]],
@@ -91,6 +96,7 @@ def split_into_batches(
         yield points[
             i:i + batch_size
         ]
+
 
 # Open-Meteo API
 def query_open_meteo(
@@ -126,22 +132,40 @@ def query_open_meteo(
 
         try:
 
-            response = requests.get(
-                OPEN_METEO_URL,
-                params=params,
-                timeout=60,
+            query_string = urllib.parse.urlencode(
+                params
             )
 
-            response.raise_for_status()
+            request_url = (
+                f"{OPEN_METEO_URL}?{query_string}"
+            )
 
-            data = response.json()
+            request = urllib.request.Request(
+                request_url,
+                method="GET",
+            )
+
+            with urllib.request.urlopen(
+                request,
+                timeout=60,
+            ) as response:
+
+                data = json.loads(
+                    response.read().decode(
+                        "utf-8"
+                    )
+                )
 
             if isinstance(data, list):
                 return data
 
             return []
 
-        except requests.RequestException as e:
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            TimeoutError,
+        ) as e:
 
             print(
                 f"Open-Meteo request failed "
@@ -157,6 +181,7 @@ def query_open_meteo(
 
     return []
 
+
 # Safe value getter
 def get_value(
     values: List,
@@ -167,6 +192,7 @@ def get_value(
         return None
 
     return values[index]
+
 
 # Flatten
 def flatten_location(
@@ -250,6 +276,7 @@ def flatten_location(
 
     return records
 
+
 # Build SQS message
 def build_message(
     records: List[Dict],
@@ -262,6 +289,7 @@ def build_message(
 
         "records": records,
     }
+
 
 # Send to SQS
 def send_to_sqs(
@@ -282,6 +310,7 @@ def send_to_sqs(
         f"SQS message sent: "
         f"{response['MessageId']}"
     )
+
 
 # Lambda Handler
 def lambda_handler(

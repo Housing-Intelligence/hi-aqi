@@ -9,3 +9,8 @@ variable "s3_bucket" {
   description = "s3 bucket to store the messages"
 }
 
+variable "waqi_secret" {
+  type = string
+  description = "api key for the waqi"
+  sensitive = true
+}

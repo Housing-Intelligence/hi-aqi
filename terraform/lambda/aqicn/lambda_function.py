@@ -1,10 +1,12 @@
 import json
 import os
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from typing import List, Dict
 
 import boto3
-import requests
 from concurrent.futures import ThreadPoolExecutor
 
 AQICN_URL = (
@@ -51,6 +53,7 @@ BEIJING_STATION_UIDS = [
 # AWS
 
 sqs = boto3.client("sqs")
+
 
 # Empty result
 def empty_station_data(
@@ -103,6 +106,7 @@ def empty_station_data(
         "wind_gust": None,
     }
 
+
 # AQICN API
 def query_aqicn_station(
     uid: int,
@@ -121,15 +125,29 @@ def query_aqicn_station(
 
         try:
 
-            response = requests.get(
-                url,
-                params=params,
-                timeout=30,
+            query_string = urllib.parse.urlencode(
+                params
             )
 
-            response.raise_for_status()
+            request_url = (
+                f"{url}?{query_string}"
+            )
 
-            result = response.json()
+            request = urllib.request.Request(
+                request_url,
+                method="GET",
+            )
+
+            with urllib.request.urlopen(
+                request,
+                timeout=30,
+            ) as response:
+
+                result = json.loads(
+                    response.read().decode(
+                        "utf-8"
+                    )
+                )
 
             # Check API status
             if result.get("status") != "ok":
@@ -144,7 +162,11 @@ def query_aqicn_station(
 
             return result
 
-        except requests.RequestException as e:
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            TimeoutError,
+        ) as e:
 
             print(
                 f"AQICN request failed for station "
@@ -162,6 +184,7 @@ def query_aqicn_station(
 
     return empty_station_data(uid)
 
+
 # Safe IAQI getter
 def get_iaqi_value(
     iaqi: Dict,
@@ -174,6 +197,7 @@ def get_iaqi_value(
     ).get(
         "v"
     )
+
 
 # Flatten current station data
 def flatten_station(
@@ -320,6 +344,7 @@ def flatten_station(
         ),
     }
 
+
 # Get one station
 def get_station_data(
     uid: int,
@@ -353,6 +378,7 @@ def get_station_data(
             uid
         )
 
+
 # Build SQS message
 def build_message(
     records: List[Dict],
@@ -368,6 +394,7 @@ def build_message(
 
         "records": records,
     }
+
 
 # Send to SQS
 def send_to_sqs(
@@ -389,6 +416,7 @@ def send_to_sqs(
         f"{response['MessageId']}"
     )
 
+
 # Lambda Handler
 def lambda_handler(
     event,
@@ -398,6 +426,7 @@ def lambda_handler(
     print(
         "Starting AQICN collection..."
     )
+
     with ThreadPoolExecutor(
         max_workers=MAX_WORKERS,
     ) as executor:
