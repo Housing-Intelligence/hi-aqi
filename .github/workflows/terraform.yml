@@ -1,4 +1,4 @@
-name: Airflow Deployment
+name: AQI Data Pipeline Deployment
 
 on:
   workflow_dispatch:
