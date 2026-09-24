@@ -45,6 +45,6 @@ jobs:
               "terraform_directory": "terraform",
               "environment": "${{ inputs.environment }}",
               "operation": "${{ inputs.operation }}",
-              "parameters_json": "{\"waqi_secret\":\"${GH_TOKEN}\"}"
+              "parameters_json": "{\"waqi_secret\":\"${WAQI_TOKEN}\"}"
             }
           }'
