@@ -43,6 +43,7 @@ jobs:
             "inputs": {
               "target_repository": "Housing-Intelligence/hi-aqi",
               "terraform_directory": "terraform",
+              "infra_name": "aqi",
               "environment": "${{ inputs.environment }}",
               "operation": "${{ inputs.operation }}",
               "parameters_json": "{\"waqi_secret\":\"${WAQI_TOKEN}\"}"
