@@ -29,6 +29,7 @@ resource "aws_lambda_function" "aqicn"  {
     role = aws_iam_role.aqicn_lambda.arn
     handler = "lambda_function.lambda_handler"
     runtime = "python3.13"
+    timeout     = 30
     environment {
       variables = {
         SQS_QUEUE_URL = aws_sqs_queue.air_quality.url
@@ -44,6 +45,7 @@ resource "aws_lambda_function" "meteo" {
   role = aws_iam_role.meteo_lambda.arn
   handler = "lambda_function.lambda_handler"
   runtime = "python3.13"
+  timeout     = 30
   environment {
     variables = {
       SQS_QUEUE_URL = aws_sqs_queue.air_quality.url
