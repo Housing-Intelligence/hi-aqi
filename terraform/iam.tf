@@ -112,6 +112,69 @@ resource "aws_iam_role_policy" "meteo_lambda" {
   })
 }
 
+data "aws_s3_bucket" "air_quality" {
+  bucket = var.s3_bucket
+}
+
+resource "aws_iam_role" "aggregator_lambda" {
+  name = "housing-air-quality-aggregator-lambda-role"
+
+  assume_role_policy = (
+    data.aws_iam_policy_document.lambda_assume_role.json
+  )
+}
+
+resource "aws_iam_role_policy" "aggregator_lambda" {
+    name = "housing-air-quality-aggregator-lambda-policy"
+
+    role = aws_iam_role.aggregator_lambda.id
+
+    policy = jsonencode({
+
+    Version = "2012-10-17"
+
+    Statement = [
+
+      {
+        Effect = "Allow"
+
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+
+        Resource = "*"
+      },
+
+      # Get message from SQS
+      {
+        Effect = "Allow"
+
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ]
+
+        Resource = aws_sqs_queue.air_quality.arn
+      },
+
+      # Save message to S3
+      {
+        Effect = "Allow"
+
+        Action = [
+          "s3:PutObject"
+        ]
+
+        Resource = "${data.aws_s3_bucket.air_quality.arn}/raw_data/public_data/*"
+      }
+    ]
+  })
+}
+
+
 # EventBridge Scheduler Assume Role
 data "aws_iam_policy_document" "scheduler_assume_role" {
 

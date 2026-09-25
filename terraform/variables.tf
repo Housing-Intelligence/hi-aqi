@@ -5,7 +5,7 @@ variable aws_region {
 
 variable "s3_bucket" {
   type        = string
-  default     = "default"
+  default     = "housing-intelligence-data"
   description = "s3 bucket to store the messages"
 }
 
