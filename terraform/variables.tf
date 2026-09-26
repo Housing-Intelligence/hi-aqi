@@ -14,3 +14,10 @@ variable "waqi_secret" {
   description = "api key for the waqi"
   sensitive = true
 }
+
+resource "aws_ssm_parameter" "waqi_token" {
+  name  = "/housing/air-quality/waqi-token"
+  type  = "SecureString"
+  value = var.waqi_secret
+  tier  = "Standard"
+}

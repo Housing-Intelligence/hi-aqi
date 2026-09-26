@@ -13,7 +13,7 @@ AQICN_URL = (
     "https://api.waqi.info/feed"
 )
 
-AQICN_TOKEN = os.environ["AQICN_TOKEN"]
+WAQI_PARAMETER_NAME = os.environ["WAQI_PARAMETER_NAME"]
 
 SQS_QUEUE_URL = os.environ["SQS_QUEUE_URL"]
 
@@ -53,7 +53,20 @@ BEIJING_STATION_UIDS = [
 # AWS
 
 sqs = boto3.client("sqs")
+ssm = boto3.client("ssm")
 
+# Get token from SSM
+def get_waqi_token() -> str:
+
+    response = ssm.get_parameter(
+        Name=WAQI_PARAMETER_NAME,
+        WithDecryption=True,
+    )
+
+    return response["Parameter"]["Value"]
+
+
+AQICN_TOKEN = get_waqi_token()
 
 # Empty result
 def empty_station_data(

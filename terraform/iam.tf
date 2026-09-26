@@ -58,6 +58,16 @@ resource "aws_iam_role_policy" "aqicn_lambda" {
         ]
 
         Resource = aws_sqs_queue.air_quality.arn
+      },
+
+      {
+        Effect = "Allow"
+
+        Action = [
+            "ssm:GetParameter"
+        ]
+
+        Resource = aws_ssm_parameter.waqi_token.arn
       }
     ]
   })

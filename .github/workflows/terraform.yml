@@ -29,7 +29,6 @@ jobs:
     steps:
       - name: Trigger platform CI/CD
         env:
-          WAQI_TOKEN: ${{ secrets.WAQI_SECRET }}
           GH_TOKEN: ${{ secrets.CICD_TRIGGER_TOKEN }}
         run: |
           curl -L -sS -f \
@@ -46,6 +45,6 @@ jobs:
               "infra_name": "aqi",
               "environment": "${{ inputs.environment }}",
               "operation": "${{ inputs.operation }}",
-              "parameters_json": "{\"waqi_secret\":\"${WAQI_TOKEN}\"}"
+              "parameters_json": "{\"waqi_secret\":\"${{ secrets.WAQI_SECRET }}\"}"
             }
           }'

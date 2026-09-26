@@ -33,7 +33,7 @@ resource "aws_lambda_function" "aqicn"  {
     environment {
       variables = {
         SQS_QUEUE_URL = aws_sqs_queue.air_quality.url
-        AQICN_TOKEN = var.waqi_secret
+        WAQI_PARAMETER_NAME = aws_ssm_parameter.waqi_token.name
       }
     }
 }
